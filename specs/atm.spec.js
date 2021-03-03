@@ -8,53 +8,65 @@ chai.use(sinonChai);
 const Atm = require('../src/atm.js')
 
 describe('ATM class', () => {
-  let subject, account
+  let subject, sandbox, account, correctPinCode, wrongPinCode
 
   before(() => {
     account = { pin: null, balance: null }
-    user = {}
-
-    sinon.stub(account, 'pin').value('1234') // example of stubbibg a property7attribute value
-    sinon.stub(account, 'balance').value('200')
+    correctPinCode = '1234'
+    wrongPinCode = '0000'
+    sandbox = sinon.createSandbox()
   });
 
   beforeEach(() => {
+    sandbox.stub(account, 'pin').value('1234') // example of stubbibg a property/attribute value
+    sandbox.stub(account, 'balance').value('200')
     subject = new Atm()
   });
 
-  it('does not allow for values not able to being handled by available denominations', () => {
+  afterEach(() => {
+    sandbox.restore()
+  });
+
+  it('is exprected to reject withdrawal of amount not processable by available denominations', () => {
     let response = subject.withdraw(52, account, '1234')
     expect(response.status).to.equal('error')
     expect(response.message).to.equal("We can not process this request")
   });
 
-  it('allows withdrawal with the right pin code', () => {
-    subject.withdraw(50, account, '1234')
+  it('is expected to allow withdrawal when provided the right pin code', () => {
+    subject.withdraw(50, account, correctPinCode)
     expect(subject.funds).to.equal(950)
   });
 
-  it('do not allow withdrawal with the wrong pin code', () => {
-    let response = subject.withdraw(50, account, '0000')
-    expect(response.status).to.equal('error')
+  it('is exprected to reject withdrawal when provided the wrong pin code', () => {
+    let response = subject.withdraw(50, account, wrongPinCode)
+    expect(response.status).to.equal("error")
     expect(response.message).to.equal("You used an incorrect pin")
   });
 
-  it('can be instantiated', () => {
-    expect(subject).to.be.an('object')
-  });
-
-  it('has initial funds', () => {
+  it('is expected to have 1000 initial funds', () => {
     expect(subject.funds).to.equal(1000)
   });
 
-  it('funds are reduced on withdraw', () => {
-    subject.withdraw(50, account, "1234")
+  it('is expected to reduce ATM funds on successful withdraw', () => {
+    subject.withdraw(50, account, correctPinCode)
     expect(subject.funds).to.equal(950)
   });
 
-  it('returns bills in denominations', () => {
-    let response = subject.withdraw(50, account, "1234")
+  it('is expected NOT to reduce ATM funds on rejected withdraw', () => {
+    subject.withdraw(50, account, '0000')
+    expect(subject.funds).to.equal(1000)
+  });
+
+  it('is expected to return an array of dispatched bills', () => {
+    let response = subject.withdraw(50, account, correctPinCode)
     let expectedBills = [20, 20, 10]
-    expect(response.bills).to.eql(expectedBills) //'equal' won't work due to use  of strict or deep equality
+    expect(response.bills).to.deep.equal(expectedBills) //'equal' won't work due to use  of strict or deep equality .eql or .deep.equal will work
+  });
+
+  it('is expected to reject a withdrawal if account has a low balance', () => {
+    let response = subject.withdraw(300, account, correctPinCode)
+    expect(response.status).to.equal("error")
+    expect(response.message).to.equal("Your bank rejected the transaction")
   });
 });
