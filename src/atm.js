@@ -1,6 +1,9 @@
 class Atm {
-  carriedDenominations = [20, 10, 5]
-  funds = 1000
+  constructor() {
+    this.carriedDenominations = Object.freeze([20, 10, 5])
+    this.funds = Object.freeze(1000)
+    Object.seal(this);
+  }
 
   withdraw(amount, account, pin) {
     if (this.requestedAmountIsNotProcessable(amount)) {
