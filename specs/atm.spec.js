@@ -1,7 +1,7 @@
-const { expect } = require('chai');
 const sinon = require('sinon')
-var chai = require("chai");
-var sinonChai = require("sinon-chai");
+const chai = require('chai')
+const expect  = chai.expect
+const sinonChai = require('sinon-chai')
 chai.use(sinonChai);
 
 
